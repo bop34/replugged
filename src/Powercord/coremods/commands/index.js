@@ -8,7 +8,8 @@ const section = {
   id: 'replugged',
   type: 0,
   name: 'Replugged',
-  icon: 'https://github.com/replugged-org.png'
+  // icon: 'https://github.com/replugged-org.png'
+  icon: 'https://cdn.discordapp.com/avatars/1000992611840049192/5d1a7c7ec81d636e931e7c120ac2b50f.webp?size=120'
 };
 let __originalSectionIcon;
 let __originalApplicationIconUrl;
@@ -43,7 +44,7 @@ module.exports = async () => {
   const classes = await getModule(m => !m.mask && m.icon && m.selectable && m.wrapper);
 
   __originalSectionIcon = SectionIcon.default;
-  SectionIcon.default = (args) => {
+  SectionIcon.default = function (...args) {
     const [ props ] = args;
     const isSmall = props.selectable === void 0;
 
@@ -63,7 +64,7 @@ module.exports = async () => {
       }));
     }
 
-    return __originalSectionIcon(args);
+    return __originalSectionIcon.apply(this, args);
   };
 
   const { BUILT_IN_SECTIONS } = getModule([ 'getBuiltInCommands' ], false);
@@ -74,27 +75,27 @@ module.exports = async () => {
   const Icons = await getModule([ 'getApplicationIconURL' ]);
   __originalApplicationIconUrl = Icons.getApplicationIconURL;
 
-  Icons.getApplicationIconURL = (args) => {
+  Icons.getApplicationIconURL = function (...args) {
     if (args[0]?.id === section.id) {
       return section.icon;
     }
 
-    return __originalApplicationIconUrl(args);
+    return __originalApplicationIconUrl.apply(this, args);
   };
 
   const SearchStore = await getModule([ 'useSearchManager' ]);
   __originalApplicationSections = SearchStore.default.getApplicationSections;
 
-  SearchStore.default.getApplicationSections = (args) => {
+  SearchStore.default.getApplicationSections = function (...args) {
     try {
-      const res = __originalApplicationSections(args) ?? [];
+      const res = __originalApplicationSections.apply(this, args) ?? [];
 
       if (!res.find(r => r.id === section.id)) {
         res.push(section);
       }
 
       return res;
-    } catch {
+    } catch (err) {
       return [];
     }
   };
@@ -112,7 +113,7 @@ module.exports = async () => {
 
       try {
         res.unshift(command);
-      } catch {
+      } catch (err) {
         // Discord calls Object.preventExtensions on the result when switching channels
         // Therefore, re-making the result array is required.
         res = [ ...res, command ];
@@ -158,9 +159,9 @@ module.exports = async () => {
     }
 
     /*
-     * Filter out duplicate built-in sections due to a bug that causes
-     * the getApplicationSections path to add another built-in commands
-     * section to the section rail
+    * Filter out duplicate built-in sections due to a bug that causes
+    * the getApplicationSections path to add another built-in commands
+    * section to the section rail
     */
 
     const builtIn = res.sectionDescriptors.filter(s => s.id === '-1');
@@ -182,5 +183,6 @@ module.exports = async () => {
     SectionIcon.default = __originalSectionIcon;
     SearchStore.default.getApplicationSections = __originalApplicationSections;
     Icons.getApplicationIconURL = __originalApplicationIconUrl;
+    delete BUILT_IN_SECTIONS.replugged;
   };
 };

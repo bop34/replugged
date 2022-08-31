@@ -30,7 +30,8 @@ async function handleCommand (options, args) {
 
       const msg = createBotMessage({
         channelId: channel,
-        content: options?.content
+        content: options?.content,
+        embeds: options?.embeds
       });
       receiveMessage(channel, msg);
     } else {
@@ -113,7 +114,7 @@ class CommandsAPI extends API {
     const { command, ...cmd } = options;
 
     this.commands.set(command, {
-      type: 0,
+      type: 1,
       inputType: 0,
       target: 1,
       id: command,
